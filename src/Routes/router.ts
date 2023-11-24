@@ -1,5 +1,5 @@
 import express from "express";
-import { joinWhatsApp } from "../Controllers/WhatsApp";
+import { joinWhatsApp } from "../Controllers/WhatsAppController";
 
 
 const router = express.Router();
