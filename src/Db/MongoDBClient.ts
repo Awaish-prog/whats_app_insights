@@ -4,7 +4,7 @@ const { MongoClient } = require("mongodb");
 const mongoURL: string = process.env.MONGO_DB_CONNECTION_STRING ? process.env.MONGO_DB_CONNECTION_STRING : ""
 
 
-async function connectToMongoDB() {
+async function connectToMongoDB(collectionString: string) {
     
     const mongoClient = new MongoClient(mongoURL, {
         useNewUrlParser: true,
@@ -14,7 +14,7 @@ async function connectToMongoDB() {
   // const { state, saveCreds } = await useMultiFileAuthState("auth_info_baileys");
     const collection = mongoClient
         .db("whatsapp_api")
-        .collection("auth_info_baileys");
+        .collection(collectionString);
 
     return collection
     
