@@ -1,4 +1,4 @@
-import { updateMembers, createGroupStats, getGroupFromDb, getGroupStatsFromDb, getGroupMembers, createGroupDataDB } from "../Db/GroupDataDB"
+import { updateMembers, createGroupStats, getGroupFromDb, getGroupStatsFromDb, getGroupMembers, createGroupDataDB, addMembers, deleteMembers } from "../Db/GroupDataDB"
 import { GroupStatsData, GroupType } from "../Types/GroupTypes"
 import { MembersData } from "../Types/MemberTypes"
 import sortArrayOfObjects from "../Utils/SortArrayOfObjects"
@@ -49,14 +49,29 @@ class GroupRepository{
         groupStats.messageSenders = {}
         const idNameMapping: any = { }
         const idAdminMapping: any = { }
+        const membersLeft: Array<MembersData> = []
+        const membersJoined: Array<MembersData> = []
+        let addMemberToNameMapping = true
+        const addMemberToAdminMapping: any = { }
         for(let i = 0; i < messagesData.length; i++){ 
             if(messagesData[i].key.remoteJid === groupId){
                 
                 if(messagesData[i].messageStubType && messagesData[i].messageStubType === 28){
                     groupStats.membersLeft += 1
+                    membersLeft.push({
+                        groupId: groupId,
+                        id: messagesData[i].key.participant,
+                    }) 
+                    addMemberToNameMapping = false
+                    addMemberToAdminMapping[messagesData[i].key.participant] = true
                 }
                 else if(messagesData[i].messageStubType && messagesData[i].messageStubType === 27){
-                    groupStats.membersJoined += 1    
+                    groupStats.membersJoined += 1  
+                    membersJoined.push({
+                        groupId: groupId,
+                        id: messagesData[i].key.participant,
+                        isAdmin: false
+                    }) 
                 }
                 else if(groupStats.messageSenders[messagesData[i].key.participant] && messagesData[i].messageStubType && messagesData[i].messageStubType === 2){
                     groupStats.messageSenders[messagesData[i].key.participant] += 1
@@ -67,33 +82,41 @@ class GroupRepository{
                     groupStats.messageSenders[messagesData[i].key.participant] = 1
                 }
 
-                if(messagesData[i].pushName){
+                if(messagesData[i].pushName && addMemberToNameMapping){
                     idNameMapping[messagesData[i].key.participant] = {
                         name: messagesData[i].pushName
                     } 
                 }
+
+                addMemberToNameMapping = true
                 
             }
             
         }
 
         for(let i = 0; i < participants.length; i++){
-            if(participants[i].admin === "admin" || participants[i].admin === "superadmin"){
+            if((participants[i].admin === "admin" || participants[i].admin === "superadmin") && !addMemberToAdminMapping[participants[i].id]){
                 groupStats.adminsCount += 1
         
                 idAdminMapping[participants[i].id] = {
                     isAdmin: true
                 }
             }
-            else{
+            else if(!addMemberToAdminMapping[participants[i].id]){
                 idAdminMapping[participants[i].id] = {
                     isAdmin: false
                 }
             }
         }
         
+        await addMembers(membersJoined)
+        if(membersLeft.length > 0){
+            await deleteMembers(membersLeft)
+        }
+        
         await createGroupStats(groupStats)
         await updateMembers(idNameMapping, idAdminMapping)
+        
     }
 
     async getGroupsStats(groupId: string, startDate: number, endDate: number){

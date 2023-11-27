@@ -1,6 +1,6 @@
 export type MembersData = {
     id: string,
     groupId: string,
-    isAdmin: boolean,
+    isAdmin?: boolean,
     name?: string
 }

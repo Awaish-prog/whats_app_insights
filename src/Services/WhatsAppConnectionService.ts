@@ -9,6 +9,13 @@ const { key, addNewGroup, jid, subject } = workerData
 
 
 async function connectToWhatsApp() {
+    
+    console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$  Target 2 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
+    console.log(workerData);
+    
+    console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$  Target 3 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+    
         
     const collection = await connectToMongoDB("auth_info_baileys")
     const { state, saveCreds, removeSession } = await useMongoDBAuthState(collection, key);
@@ -53,6 +60,9 @@ async function connectToWhatsApp() {
   
     sock.ev.on("messages.upsert", async (messageInfoUpsert: any) => {
       
+    console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$  Target 4 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+      
+      
       
       if(addNewGroup && messageInfoUpsert.messages && messageInfoUpsert.messages[0] && messageInfoUpsert.messages[0].message && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation.toLowerCase() === "serri"){
         
@@ -64,6 +74,9 @@ async function connectToWhatsApp() {
       }
       
       if(messageInfoUpsert.type === "append" && !addNewGroup){
+
+        console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$  Target 5 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
 
         const metadata = await sock.groupMetadata(jid)
 

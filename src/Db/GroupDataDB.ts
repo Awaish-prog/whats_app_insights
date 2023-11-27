@@ -105,3 +105,15 @@ export async function getAllGroups(){
     
     return allGroups
 }
+
+export async function addMembers(members: Array<MembersData>){
+    const membersDB = await connectToMongoDB("members")
+
+    await membersDB.insertMany(members)
+}
+
+export async function deleteMembers(members: Array<MembersData>){
+    const membersDB = await connectToMongoDB("members")
+
+    await membersDB.deleteMany({ $or: members });
+}
