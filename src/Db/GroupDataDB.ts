@@ -62,9 +62,7 @@ export async function updateMembers(idToName: any, idToAdmin: any){
     const ids = Object.keys(idToName)
     const adminIds = Object.keys(idToAdmin)
 
-    // Iterate through each ID in the mapping object
     for (let i = 0; i < ids.length; i++) {
-      // Add update operation to the bulk operations array
       bulkOpsName.push({
         updateOne: {
           filter: { id: ids[i] },
@@ -74,7 +72,6 @@ export async function updateMembers(idToName: any, idToAdmin: any){
     }
 
     for (let i = 0; i < adminIds.length; i++) {
-        // Add update operation to the bulk operations array
         bulkOpsAdmin.push({
           updateOne: {
             filter: { id: adminIds[i] },

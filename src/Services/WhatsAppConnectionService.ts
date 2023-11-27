@@ -51,16 +51,8 @@ async function connectToWhatsApp() {
       }
     })
 
-    // sock.ev.on("messages.reaction", (reactions: any) => {
-    //   console.log(reactions);
-      
-    // })
-
   
     sock.ev.on("messages.upsert", async (messageInfoUpsert: any) => {
-      console.log("****************************** Upsert *************************************");
-      
-      console.log(JSON.stringify(messageInfoUpsert, undefined, 2));
       
       
       if(addNewGroup && messageInfoUpsert.messages && messageInfoUpsert.messages[0] && messageInfoUpsert.messages[0].message && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation.toLowerCase() === "serri"){
@@ -69,7 +61,7 @@ async function connectToWhatsApp() {
         
         await groupRepository.createGroupData(metadata, key)
 
-        
+        parentPort?.postMessage("terminate")
       }
       
       if(messageInfoUpsert.type === "append" && !addNewGroup){
@@ -79,13 +71,9 @@ async function connectToWhatsApp() {
         console.log(metadata);
         
         
-        await groupRepository.updateGroupsData(messageInfoUpsert.messages, metadata.participants, jid)
-
+        await groupRepository.updateGroupsData(messageInfoUpsert.messages, metadata.participants, jid, subject)
+        parentPort?.postMessage("terminate")
       }
-      
-      
-      console.log("Endd...");
-      parentPort?.postMessage("terminate")
       
     });
     sock.ev.on("creds.update", saveCreds);

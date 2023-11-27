@@ -1,11 +1,13 @@
 import { updateMembers, createGroupStats, getGroupFromDb, getGroupStatsFromDb, getGroupMembers, createGroupDataDB } from "../Db/GroupDataDB"
+import { GroupStatsData, GroupType } from "../Types/GroupTypes"
+import { MembersData } from "../Types/MemberTypes"
 import sortArrayOfObjects from "../Utils/SortArrayOfObjects"
 
 
 class GroupRepository{
 
     async createGroupData(groupMetaData: any, key: string) {
-        const groupData = {
+        const groupData: GroupType = {
             id: groupMetaData.id,
             subject: groupMetaData.subject,
             memberCount: groupMetaData.size,
@@ -13,7 +15,7 @@ class GroupRepository{
             key: key
         }
 
-        const membersData = []
+        const membersData: Array<MembersData> = []
         const members = groupMetaData.participants
         for(let i = 0; i < members.length; i++){
             membersData.push({
@@ -27,7 +29,7 @@ class GroupRepository{
         await createGroupDataDB(groupData, membersData)
     }
 
-    async updateGroupsData(messagesData: any, participants: any, groupId: string){
+    async updateGroupsData(messagesData: Array<any>, participants: Array<any>, groupId: string, subject: string){
 
         const groupStats: any = { }
             
@@ -39,7 +41,8 @@ class GroupRepository{
             groupStats.membersJoined = 0
             groupStats.membersLeft = 0
             groupStats.membersCount = participants.length
-            groupStats.adminsCount = 0
+            groupStats.adminsCount = 0,
+            groupStats.subject = subject
         }
         
 
@@ -88,9 +91,6 @@ class GroupRepository{
                 }
             }
         }
-        console.log(idNameMapping);
-        console.log(idAdminMapping);
-        
         
         await createGroupStats(groupStats)
         await updateMembers(idNameMapping, idAdminMapping)
@@ -102,13 +102,14 @@ class GroupRepository{
 
         let groupmembers = await getGroupMembers(groupId)
         
-        const groupStatsData: any = {
+        const groupStatsData: GroupStatsData = {
             numberOfMessages: 0,
             messageSenders: {  },
             membersLeft: 0,
             membersJoined: 0,
             totalMembers: [],
-            adminsCount: []
+            adminsCount: [],
+            totalActiveMembers: 0
         }
 
         const groupMembersObject: any = { }
@@ -120,11 +121,17 @@ class GroupRepository{
         
         for(let i = 0; i < groupStats.length; i++){
             groupStatsData.numberOfMessages += groupStats[i].numberOfMessages
+
             const messageSendersKeys = Object.keys(groupStats[i].messageSenders)
+
             groupStatsData.membersLeft += groupStats[i].membersLeft
+
             groupStatsData.membersJoined += groupStats[i].membersJoined
+
             groupStatsData.totalMembers.push(groupStats[i].membersCount)
+
             groupStatsData.adminsCount.push(groupStats[i].adminsCount)
+
             for(let j = 0; j < messageSendersKeys.length; j++){
                 if(!groupStatsData.messageSenders.hasOwnProperty(messageSendersKeys[j])){
                     groupStatsData.messageSenders[messageSendersKeys[j]] = {

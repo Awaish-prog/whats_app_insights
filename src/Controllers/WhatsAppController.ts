@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { Worker } from "worker_threads";
+import { WorkerData } from "../Types/WorkerData";
 
 
 //   export default useMongoDBAuthState
 export function joinWhatsApp(req: Request, res: Response){
 
-    const workerData = {
+    const workerData: WorkerData = {
         key: "awaish",
         addNewGroup: true
     }

@@ -1,29 +1,22 @@
 const schedule = require('node-schedule');
 import { getAllGroups } from "../Db/GroupDataDB";
 import { Worker } from "worker_threads";
+import { GroupType } from "../Types/GroupTypes";
 
 
 export function runScheduledTasks(){
     const rule = new schedule.RecurrenceRule();
 
-    schedule.scheduleJob("*/10 * * * * *", async function(){
-        // const allGroups = await getAllGroups()
-
-        // for (let i = 0; i < allGroups.length; i++) {
-        //     console.log(allGroups[i]);
-        // }
+    schedule.scheduleJob("0 0 0 * * *", async function(){
+        // srcapWhatsAppData()   .... daily data fetch
     });
 }
 
-function sleep(seconds: number){
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {}, seconds * 1000)
-    })
-}
+
 
 export async function srcapWhatsAppData() {
     
-    const allGroups = await getAllGroups()
+    const allGroups: Array<GroupType> = await getAllGroups()
     
     for (let i = 0; i < allGroups.length; i++) {
         console.log(allGroups[i]);
