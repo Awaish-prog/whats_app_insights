@@ -1,5 +1,3 @@
-
-
 const { Curve, signedKeyPair } = require("@whiskeysockets/baileys/lib/Utils/crypto");
 const { generateRegistrationId } = require("@whiskeysockets/baileys/lib/Utils/generics");
 const { randomBytes } = require("crypto");

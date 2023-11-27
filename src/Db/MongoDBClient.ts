@@ -11,7 +11,7 @@ async function connectToMongoDB(collectionString: string) {
         useUnifiedTopology: true,
     });
     await mongoClient.connect();
-  // const { state, saveCreds } = await useMultiFileAuthState("auth_info_baileys");
+  
     const collection = mongoClient
         .db("whatsapp_api")
         .collection(collectionString);

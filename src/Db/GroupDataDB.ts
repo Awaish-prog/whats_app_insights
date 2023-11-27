@@ -1,6 +1,8 @@
+import { GroupType } from "../Types/GroupTypes";
+import { MembersData } from "../Types/MemberTypes";
 import connectToMongoDB from "./MongoDBClient"
 
-export async function createGroupDataDB(groupData: any, membersData: any) {
+export async function createGroupDataDB(groupData: GroupType, membersData: Array<MembersData>) {
     const groupCollection = await connectToMongoDB("groups")
 
     const groupDocument = await groupCollection.findOne({ id: groupData.id })

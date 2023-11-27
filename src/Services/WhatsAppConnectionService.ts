@@ -45,8 +45,7 @@ async function connectToWhatsApp() {
       }
 
       if (qr) {
-        console.log(qr);
-        // write custom logic over here
+        
         parentPort?.postMessage(qr)
       }
     })
