@@ -4,12 +4,13 @@ import sortArrayOfObjects from "../Utils/SortArrayOfObjects"
 
 class GroupRepository{
 
-    async createGroupData(groupMetaData: any) {
+    async createGroupData(groupMetaData: any, key: string) {
         const groupData = {
             id: groupMetaData.id,
             subject: groupMetaData.subject,
             memberCount: groupMetaData.size,
             createdAt: groupMetaData.creation,
+            key: key
         }
 
         const membersData = []
@@ -23,7 +24,7 @@ class GroupRepository{
         }
         
         
-        createGroupDataDB(groupData, membersData)
+        await createGroupDataDB(groupData, membersData)
     }
 
     async updateGroupsData(messagesData: any, participants: any, groupId: string){
@@ -41,17 +42,12 @@ class GroupRepository{
             groupStats.adminsCount = 0
         }
         
-        for(let i = 0; i < participants.length; i++){
-            if(participants[i].admin === "admin" || participants[i].admin === "superadmin"){
-                groupStats.adminsCount += 1
-            }
-        }
 
         groupStats.messageSenders = {}
         const idNameMapping: any = { }
+        const idAdminMapping: any = { }
         for(let i = 0; i < messagesData.length; i++){ 
             if(messagesData[i].key.remoteJid === groupId){
-                console.log(messagesData[i].messageStubType);
                 
                 if(messagesData[i].messageStubType && messagesData[i].messageStubType === 28){
                     groupStats.membersLeft += 1
@@ -63,19 +59,41 @@ class GroupRepository{
                     groupStats.messageSenders[messagesData[i].key.participant] += 1
                     groupStats.numberOfMessages += 1
                 }
-                else{
+                else if(messagesData[i].messageStubType && messagesData[i].messageStubType === 2){
                     groupStats.numberOfMessages += 1
                     groupStats.messageSenders[messagesData[i].key.participant] = 1
                 }
+
+                if(messagesData[i].pushName){
+                    idNameMapping[messagesData[i].key.participant] = {
+                        name: messagesData[i].pushName
+                    } 
+                }
                 
-                idNameMapping[messagesData[i].key.participant] = messagesData[i].pushName
             }
             
         }
 
-
-        createGroupStats(groupStats)
-        updateMembers(idNameMapping)
+        for(let i = 0; i < participants.length; i++){
+            if(participants[i].admin === "admin" || participants[i].admin === "superadmin"){
+                groupStats.adminsCount += 1
+        
+                idAdminMapping[participants[i].id] = {
+                    isAdmin: true
+                }
+            }
+            else{
+                idAdminMapping[participants[i].id] = {
+                    isAdmin: false
+                }
+            }
+        }
+        console.log(idNameMapping);
+        console.log(idAdminMapping);
+        
+        
+        await createGroupStats(groupStats)
+        await updateMembers(idNameMapping, idAdminMapping)
     }
 
     async getGroupsStats(groupId: string, startDate: number, endDate: number){
@@ -134,9 +152,6 @@ class GroupRepository{
             )
         }
         
-        
-        
-
         groupStatsData.messageSenders = sortArrayOfObjects(membersInInteractionOrder)
 
 

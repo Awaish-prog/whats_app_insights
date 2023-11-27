@@ -2,11 +2,13 @@ import useMongoDBAuthState from "../Db/SessionStore";
 import connectToMongoDB from "../Db/MongoDBClient";
 const { DisconnectReason } = require("@whiskeysockets/baileys");
 const makeWASocket = require("@whiskeysockets/baileys").default;
-import { Response } from "express";
 import { groupRepository } from "../Repository/groups.repository";
+import { parentPort, workerData } from "worker_threads";
+
+const { key, addNewGroup, jid, subject } = workerData
 
 
-async function connectToWhatsApp(key: string, res: Response) {
+async function connectToWhatsApp() {
         
     const collection = await connectToMongoDB("auth_info_baileys")
     const { state, saveCreds, removeSession } = await useMongoDBAuthState(collection, key);
@@ -31,7 +33,7 @@ async function connectToWhatsApp(key: string, res: Response) {
   
         
         if (shouldReconnect) {
-            connectToWhatsApp(key, res);
+            connectToWhatsApp();
           return
         }
         console.log("Disconnected");
@@ -45,8 +47,7 @@ async function connectToWhatsApp(key: string, res: Response) {
       if (qr) {
         console.log(qr);
         // write custom logic over here
-
-        return res.end(qr)
+        parentPort?.postMessage(qr)
       }
     })
 
@@ -62,26 +63,32 @@ async function connectToWhatsApp(key: string, res: Response) {
       console.log(JSON.stringify(messageInfoUpsert, undefined, 2));
       
       
-      if(messageInfoUpsert.messages && messageInfoUpsert.messages[0] && messageInfoUpsert.messages[0].message && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation.toLowerCase() === "serri"){
+      if(addNewGroup && messageInfoUpsert.messages && messageInfoUpsert.messages[0] && messageInfoUpsert.messages[0].message && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation && messageInfoUpsert.messages[0].message.conversation.toLowerCase() === "serri"){
         
         const metadata = await sock.groupMetadata(messageInfoUpsert.messages[0].key.remoteJid);
         
-        groupRepository.createGroupData(metadata)
+        await groupRepository.createGroupData(metadata, key)
+
         
       }
       
-      if(messageInfoUpsert.type === "append"){
+      if(messageInfoUpsert.type === "append" && !addNewGroup){
 
-        const metadata = await sock.groupMetadata(messageInfoUpsert.messages[0].key.remoteJid)
+        const metadata = await sock.groupMetadata(jid)
+
+        console.log(metadata);
         
-        groupRepository.updateGroupsData(messageInfoUpsert.messages, metadata.participants, messageInfoUpsert.messages[0].key.remoteJid)
+        
+        await groupRepository.updateGroupsData(messageInfoUpsert.messages, metadata.participants, jid)
+
       }
       
       
       console.log("Endd...");
+      parentPort?.postMessage("terminate")
       
     });
     sock.ev.on("creds.update", saveCreds);
 }
 
-export default connectToWhatsApp
+connectToWhatsApp()
